@@ -1,0 +1,10 @@
+{
+  "generator-py-struct": {
+    "user": "Cyril Godart",
+    "email": "cyril.godart@gmail.com",
+    "projectID": "CacheIntervals",
+    "desc": "Memoization with interval parameters",
+    "gituser": "cyril.godart@gmail.com",
+    "credentials": "credentials.json"
+  }
+}
