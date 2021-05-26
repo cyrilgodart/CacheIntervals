@@ -1,5 +1,6 @@
 import pendulum
 import pandas
+import datetime
 
 
 def pdl2pd(dt_pdl):
@@ -8,7 +9,9 @@ def pdl2pd(dt_pdl):
 def pd2pdl(dt_pd):
     return pendulum.instance(dt_pd)
 
-
+def all2pdl(dt):
+    if isinstance(dt, pendulum.Date): return dt
+    if isinstance(dt, pandas.Timestamp) or isinstance(dt, datetime.datetime): return pd2pdl(dt)
 
 if __name__ == '__main__':
     import loguru

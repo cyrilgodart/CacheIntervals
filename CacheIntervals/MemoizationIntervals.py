@@ -1,4 +1,3 @@
-from tempfile import mkdtemp
 import pendulum as pdl
 import sys
 
@@ -6,195 +5,26 @@ sys.path.append(".")
 # the memoization-related library
 import loguru
 
-import portion
-import CacheIntervals as ci
-from CacheIntervals.Intervals import pd2po, po2pd
-from CacheIntervals.SetsAndIterators import flatten
-from CacheIntervals.Dates import pdl2pd, pd2pdl
-from CacheIntervals.Timer import Timer
-
 import itertools
-import klepto
-import klepto.safe
-import klepto.archives
+import portion
+
 import klepto.keymaps
 
+
+
+import CacheIntervals as ci
+from CacheIntervals.utils import flatten
+from CacheIntervals.utils import pdl2pd, pd2pdl
+from CacheIntervals.utils import Timer
+
+from CacheIntervals.Intervals import pd2po, po2pd
+from CacheIntervals.RecordInterval  import RecordIntervals, RecordIntervalsPandas
+
 class QueryRecorder:
+    '''
+    A helper class
+    '''
     pass
-
-class RecordIntervals:
-    '''
-   The memoisation of time series involve:
-    1. a persistence of all intervals calculated
-    2. a calculation of the overlap of any new interval passed as parameter with the
-       previously calculated intervals.
-    In the below, =i= is the interval passed as parameter, while =s= are the stored intervals.
-    i is always atomic
-    =s= is actually a IntervalDict: interval -> time of call
-    ** i disjunct from  any of the atomic interval in s
-        - store i with value now
-        - call the function with parameter i (no memoisation)
-    ** i overlaps an atomic interval in s
-        - store the call time with the key which is  the difference of i with that interval
-        - the intersection is treated with [[id:5e181d0d-65c1-42fd-9122-e5dbd19275bb][first case]]
-        - the difference with [[id:34d9e82e-64d1-4e1c-9fde-5d8afbce5360][the second case]]
-    '''
-    def __init__(self,
-                 rounding=None,
-                 subintervals_requiredQ=False,
-                 subinterval_minQ=False):
-        '''
-        :param time_between_calls allows not updating the
-            calls unless a minimum time has passed
-        :param subintervals_requiredQ: if an existing interval overlaps
-        returns:
-           - the whole interval (subinterval_requiredQ=False)
-           - replace the existing interval by the intersection and complement
-        The storage of intervals is done through a portion.IntervalDict
-        see https://github.com/AlexandreDecan/portion
-        '''
-        # IntervalDict prevent merge of adjacent or overalapping intervales
-        # an undesirable feature give the fact that a interval correpsond to an actual call of the function.
-        self.intervals = portion.IntervalDict()
-        # calls is the latest
-        self.calls = []
-        self.tol = rounding
-        self.subintervalsQ=subintervals_requiredQ
-        self.subintervals_minQ=subinterval_minQ
-
-
-    def disjunct(self, i):
-        '''
-        if i is disjunct from all previously
-        stored intervals:
-        - store this new interval
-        - instruct to call the function
-          with this interval as parameter
-        :param i: an interval that
-               has no overlap wih
-               any previously stored interval
-        '''
-        if self.tol is not None:
-            if i.upper - i.lower <= self.tol: return
-
-        self.intervals[i] = pdl.now()
-        self.calls.append(i)
-
-    def contained(self, s):
-        '''
-        if i is contained in one of the
-        stored intervals:
-        - instruct to call the function
-          with the stored containing interval as parameter
-          Note: memoisation happens
-        :param s: an interval that
-                  contains the interval
-                  passed originally as
-                  argument to the function
-        '''
-        self.calls.append(list(s))
-        pass
-
-    def __call__(self, i):
-        '''
-        the main function
-        :param i: the original interval passed
-                as parameter to the function
-        :return: the calls to be made
-        '''
-        # reinitialise calls.
-        self.calls = []
-        try:
-            itvls_overlap = self.intervals[i]
-        except Exception as e:
-            logging.getLogger(__name__).error(f'{e}', exc_info=True)
-        if len(itvls_overlap.keys()) == 0:
-            self.disjunct(i)
-        else:
-            if not self.subintervalsQ:
-                ''' 
-                if the interval requested is contained in an existing
-                intervale return the larger interval. 
-                This makes often sense as the filtering of the extra-data
-                can be faster than querying again
-                '''
-                for s in self.intervals.keys():
-                    if not (i & s).empty: self.contained(s)
-                intervals = portion.empty()
-                for s in itvls_overlap.keys():
-                    intervals = intervals | s  #itertools.accumulate(itvls_overlap, lambda i,o: i | o   )
-                disjuncts = i - intervals
-                for s in disjuncts:
-                    if not s.empty: self.disjunct(s)
-            else:
-                '''
-                if a subset of an existing interval is requested then break it down
-                Several strategies are possible here
-                
-                '''
-                if not self.subintervals_minQ:
-                    '''
-                    the new intervals called will not be split. 
-                    the old one will
-                    '''
-                    intervals_contained = portion.empty()
-                    for s in self.intervals:
-                        if s in i:
-                            intervals_contained |= s
-                            self.contained(s)
-                    disjuncts = i - intervals_contained
-                    for s in disjuncts:
-                        if not s.empty: self.disjunct(s)
-                else:
-                    '''
-                    both overlapping intervals will be split
-                    '''
-                    #self.disjunct(i)
-
-                    inter = portion.empty()
-                    diffs = []
-                    for s in self.intervals:
-                        diffs.append(i - s)
-                    diff = list(itertools.accumulate(diffs, lambda x,y: x&y))
-                    if len(diff):
-                        diff = diff[-1]
-                        for s in diff:
-                            self.disjunct(s)
-                    inter = []
-                    for s in self.intervals:
-                        inter = s&i
-                        for ii in inter:
-                            if ii not in self.intervals:
-                                self.disjunct(ii)
-                            else:
-                                if ii not in self.calls:
-                                    self.contained(ii)
-
-        calls = sorted(map(list, flatten(self.calls)))
-        return calls
-
-class RecordIntervalsPandas(RecordIntervals):
-    '''
-    Adapter allows to pass pandas interval to the
-    RecordIntervals class.
-    '''
-    def __init__(self,
-                 rounding=None,
-                 subintervals_requiredQ=False,
-                 subinterval_minQ=False):
-        '''
-        :param time_between_calls allows not updating the
-            calls unless a minimum time has passed
-        The storage of intervals is done through a portion.IntervalDict
-        see https://github.com/AlexandreDecan/portion
-        '''
-        super().__init__(rounding, subintervals_requiredQ, subinterval_minQ)
-
-    def __call__(self, i):
-        calls = super().__call__(pd2po(i))
-        calls = list(map(po2pd, flatten(calls)))
-        return calls
-
 
 class MemoizationWithIntervals(object):
     '''
@@ -370,8 +200,6 @@ if __name__ == "__main__":
     import logging
     import daiquiri
     import pandas as pd
-    import portion as po
-    import datetime
     import time
     daiquiri.setup(logging.DEBUG)
     logging.getLogger('OneTick64').setLevel(logging.WARNING)
@@ -407,7 +235,7 @@ if __name__ == "__main__":
                     calls)))
 
     #                               Testing record intervals -> ok
-    if False:
+    if True:
         itvals = RecordIntervals()
         calls = itvals(portion.closed(pdl.yesterday(), pdl.today()))
         print(list(map( lambda i: (i.lower.to_date_string(), i.upper.to_date_string()), calls)))
@@ -417,7 +245,7 @@ if __name__ == "__main__":
         print( list( map( lambda i: (i.lower.to_date_string(), i.upper.to_date_string()),
                     calls)))
     #                            Testing record intervals pandas -> ok
-    if False:
+    if True:
         itvals = RecordIntervalsPandas()
         # yesterday -> today
         calls = itvals(pd.Interval(pdl2pd(pdl.yesterday()), pdl2pd(pdl.today()), closed='left'))

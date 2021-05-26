@@ -1,14 +1,8 @@
-from tempfile import mkdtemp
-import sys
-import logging
-
-sys.path.append(".")
-import pendulum as pdl
-import portion
-from CacheIntervals.SetsAndIterators import flatten
-
 import itertools
+import portion
+import pendulum as pdl
 
+from CacheIntervals.utils import flatten
 from CacheIntervals.Intervals import po2pd, pd2po
 
 class RecordIntervals:
@@ -159,7 +153,7 @@ class RecordIntervals:
                                 if ii not in self.calls:
                                     self.contained(ii)
 
-        calls = sorted(map(list, flatten(self.calls)))
+        calls = sorted(flatten(self.calls))
         return calls
 
 
@@ -190,8 +184,8 @@ if __name__ == "__main__":
     import daiquiri
     import pandas as pd
     import loguru
-    from CacheIntervals.Dates import pdl2pd, pd2pdl
-    import time
+    from CacheIntervals.utils.Dates import pdl2pd, pd2pdl, all2pdl
+
     daiquiri.setup(logging.DEBUG)
     logging.getLogger('OneTick64').setLevel(logging.WARNING)
     logging.getLogger('databnpp.ODCB').setLevel(logging.WARNING)
@@ -215,24 +209,41 @@ if __name__ == "__main__":
 
 
     def print_calls(calls):
-        print( list( map( lambda i: (i.left, i.right), calls)))
-    def print_calls_dates(calls):
-        print( list( map( lambda i:
-                          (pd2pdl(i.left).to_date_string(), pd2pdl(i.right).to_date_string()),
-                          calls)))
-    def display_calls(calls):
-        loguru.logger.info( list( map( lambda i:
-                                       (pd2pdl(i.left).to_date_string(), pd2pdl(i.right).to_date_string()),
-                                       calls)))
+        if isinstance(calls[0], pd.Interval):
+            print(list(map(lambda i: (i.left, i.right), calls)))
+        else:
+            print(list(map(lambda i: (i.lower, i.upper), calls)))
+
+
+    def print_calls_dates(calls,itv_pandasQ = True):
+        if itv_pandasQ:
+            print( list( map( lambda i:
+                              (all2pdl(i.left).to_date_string(), all2pdl(i.right).to_date_string()),
+                              calls)))
+        else:
+            print(list(map(lambda i:
+                           (all2pdl(i.lower).to_date_string(), all2pdl(i.upper).to_date_string()),
+                           calls)))
+
+
+    def display_calls(calls, ):
+        if isinstance(calls[0], pd.Interval):
+            loguru.logger.info( list( map( lambda i:
+                                           (pd2pdl(i.left).to_date_string(), pd2pdl(i.right).to_date_string()),
+                                           calls)))
+        else:
+            loguru.logger.info( list( map( lambda i:
+                                           (pd2pdl(i.lower).to_date_string(), pd2pdl(i.upper).to_date_string()),
+                                           calls)))
 
     #                               Testing record intervals -> ok
-    if False:
+    if True:
         itvals = RecordIntervals()
         calls = itvals(portion.closed(pdl.yesterday(), pdl.today()))
-        display_calls(calls)
+        print_calls_dates(calls, False)
         print(list(map(lambda i: type(i), calls)))
         calls = itvals( portion.closed(pdl.yesterday().add(days=-1), pdl.today().add(days=1)))
-        print_calls_dates(calls)
+        print_calls_dates(calls, False)
     #                            Testing record intervals pandas -> ok
     if True:
         itvals = RecordIntervalsPandas()
