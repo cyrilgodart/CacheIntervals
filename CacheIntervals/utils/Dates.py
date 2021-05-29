@@ -12,6 +12,7 @@ def pd2pdl(dt_pd):
 def all2pdl(dt):
     if isinstance(dt, pendulum.Date): return dt
     if isinstance(dt, pandas.Timestamp) or isinstance(dt, datetime.datetime): return pd2pdl(dt)
+    raise (f'Unknown date type: {dt}')
 
 if __name__ == '__main__':
     import loguru
