@@ -187,12 +187,52 @@ The default interval strategy returns a superset of the requested interval if su
 This is incompatible with an aggregation strategy that takes the cumulative sum or the average of the data
 returned over the interval.
 
+Access to cached function
+--------------------------
+
+Passing the key-word argument =get_function_cachedQ=True= will result in all other arguments
+being ignored and the cached function being returned. Depending on the underlying memoization implementation,
+some introspection might be available.
+::
+        @MemoizationWithIntervals(
+            [0], ['interval1'],
+            aggregation=list,
+            debug=True,
+            memoization=klepto.lru_cache(
+                maxsize=200,
+                cache=klepto.archives.dict_archive(),
+                keymap=klepto.keymaps.stringmap(typed=False, flat=False)))
+        def function_with_interval_params(interval0,
+                                          interval1=pd.Interval(
+                                              tstwodaysago,
+                                              tstomorrow)):
+            time.sleep(1)
+            print('**********************************')
+            print(f'interval0: {interval0}')
+            print(f'interval1: {interval1}')
+            return (interval0, interval1)
+
+        print('==== First pass ===')
+        # function_with_interval_params(pd.Interval(pdl.yesterday(), pdl.today(),closed='left'),
+        #                               interval1 = pd.Interval(pdl.yesterday().add(days=0),
+        #                                                           pdl.today(), closed='both')
+        #                               )
+        f_mzed = function_with_interval_params(get_function_cachedQ=True)
+        print(
+            f'Final result:\n{function_with_interval_params(pd.Interval(tsyesterday, tstoday))}'
+        )
+        print(f'==============\nf_memoized live cache: {f_mzed.__cache__()}')
+        print(f'f_memoized live cache type: {type(f_mzed.__cache__())}')
+        print(f'f_memoized file cache: {f_mzed.__cache__().archive}')
+        print(f'f_memoized live cache: {f_mzed.info()}')
+        f_mzed.__cache__().dump()
+
 
 Testing
 =======
 
-In order to run the tests, you need to first generate a SQL Lite database. To do so, run the GeneratorTests.py
-script from the Ancillaries directory.
+In order to run the tests, you need to first generate a SQL Lite database. To do so, run the ``GeneratorTests.py``
+script from the ``Ancillaries`` directory.
 
 
 Author
