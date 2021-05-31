@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 def readme():
     with open('README.rst') as f:
@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='CacheIntervals',
-    version='1.0.0',
+    use_scm_version=True,
     description='Memoization with interval parameters',
     long_description=readme(),
     url='https://github.com/cyril.godart@gmail.com/CacheIntervals',
@@ -14,7 +14,7 @@ setup(
     author='Cyril Godart',
     author_email='cyril.godart@gmail.com',
     keywords=['?'],
-    packages=['CacheIntervals'],
+    packages=find_packages(),
     install_requires=[
          'pytest>=2.9.2',
          'sphinx>=1.4.5',
@@ -22,7 +22,7 @@ setup(
          'tqdm>=4.36.1',
          'pytest-cov>=2.8.1',
          'coverage>=4.5.4',
-
+         'setuptools_scm'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
