@@ -82,8 +82,8 @@ parameters so that the lazy evaluation can be delegated to an existing implement
 of the =MemoizationWithIntervals= object thus takes a fully constructed memoization object, that will perform
 the lazy evaluation.
 
- The ``klepto`` (`<https://github.com/uqfoundation/klepto>`_ ) package LRU algorithm  was chosen as default implementation. To change to another implementation, simply
-pass a fully constructed memoization objected to the constructor.
+The ``klepto`` (`<https://github.com/uqfoundation/klepto>`_ ) package LRU algorithm  was chosen as default implementation.
+To change to another implementation, simply pass a fully constructed memoization objected to the constructor.
 
 So typically to use the ``functools cache`` algorithm:
 ::
@@ -105,7 +105,7 @@ So typically to use the ``functools cache`` algorithm:
 Handling other interval types
 ----------------------
 
-Alexandre Decan's *Portion* (`<https://github.com/AlexandreDecan/portion>`_ )package is a great package for interval arithmetic.
+Alexandre Decan's *Portion* (`<https://github.com/AlexandreDecan/portion>`_ ) package is a great package for interval arithmetic.
 For the interval object itself, though, it is probably not the most common
 implementation. Arguably, Pandas' ``Interval`` can claim that title. But one may have
 one's own implementation. Using ``CacheIntervals`` with a particular interval type
