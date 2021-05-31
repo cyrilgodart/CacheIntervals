@@ -8,3 +8,8 @@
 # @email = 'cyril.godart@gmail.com'
 
 name = 'CacheIntervals'
+import sys
+
+sys.path.append('.')
+
+from .MemoizationIntervals import MemoizationWithIntervals
