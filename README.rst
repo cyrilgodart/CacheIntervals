@@ -22,7 +22,7 @@ CacheIntervals allows lazy evaluation of functions with interval parameters. Sev
 Usage
 ============
 
-Similarly to many caching library, CacheIntervals provides memoization through a decorator mechanism.
+Similarly to many caching libraries, ``CacheIntervals`` provides memoization through a decorator mechanism.
 The constructor of the memoization must specify:
     - the positon arguments that are intervals to be lazy evaluated.
     - the key word arguments that are intervales to be lazy evaluated.
@@ -33,7 +33,7 @@ The ``MemoizationWithIntervals`` constructor
 interval parameters
 ----------------------
 
-To properly handle a generic function, the interval parameters that are candidate for memoization
+To properly handle a generic function, the interval parameters that are candidates for memoization
 need to be specified by the user.
 
 So the first two parameters of a ``MemoizationWithIntervals`` constructor are the indices of positional
@@ -64,9 +64,8 @@ The other arguments in the constructor will be detailed in the following sub-sec
 
 The return type issue: specifying an aggregation method
 -------------------------------------------------------
-It needs not to be so though. To properly account to the general case, the user needs to have the flexibility
-to specify an aggregation operation. This aggregation specification will be a parameter of the memoization
-class constructor. The aggregation function will take the list of results from the different call and
+The user must specify an aggregation operation. This aggregation specification will be a parameter of the memoization
+class constructor. The aggregation function will take the list of results from the different calls and
 return a result whose type is compatible with the initial function.
 
 So this aggregation function could be as simple as ``aggregation=list`` or
@@ -78,14 +77,13 @@ apply.
 The memoization algorithm
 ----------------------
 
-The sole purpose of the package described in this article is to apply a preprocessing to a function taking interval
+The sole purpose of the package is to apply a preprocessing to a function taking interval
 parameters so that the lazy evaluation can be delegated to an existing implementation of the user's choice. The constructor
 of the =MemoizationWithIntervals= object thus takes a fully constructed memoization object, that will perform
 the lazy evaluation.
 
-As can be seen, we chose the =klepto= package as default implementation. We found in that package unique features that
-were compelling to us and kept it that way. It is not the best documented package but there are a lot of examples provided
-from which the usage and options can be inferred.
+ The ``klepto`` package LRU algorithm  was chosen as default implementation. To change to another implementation, simply
+pass a fully constructed memoization objected to the constructor.
 
 So typically to use the ``functools cache`` algorithm:
 ::
@@ -109,13 +107,13 @@ Handling other interval types
 
 Alexandre Decan's *Portion* package is a great package for interval arithmetic.
 For the interval object itself, though, it is probably not the most common
-implementation. Arguably, Pandas' Interval can claim that title. But one may have
+implementation. Arguably, Pandas' ``Interval`` can claim that title. But one may have
 one's own implementation. Using ``CacheIntervals`` with a particular interval type
 requires creating an ad-hoc type of interval recorder and a bit of wrapping to allow
 a two way translation between the *Portion*'s native interval type and the user's interval type.
 
 The package ``CacheIntervals`` provides an example of such a wrapping for the
-Pandas Interval. The purpose for implementing that specific interval was two
+Pandas ``Interval``. The purpose for implementing that specific interval was two
 fold. On the one hand, it is a template for user who want to implement that
 override. And on the other hand, the Pandas' ``Interval`` type, along with Alexandre
 Decan's native type should cover most of the needs. By default, the type of
@@ -145,10 +143,10 @@ Tolerance
 
 In order to prevent unnecessary transactions following rapid succession of requests, one may decide
 that below a tolerance threshold no new call is issued. This approach is common in caching algorithms
-and is often known as rounding.
+and is often known as *rounding*.
 
-In our case, all it requires is a small modification of the =RecordIntervals= class. The constructor
-now accepts a rounding argument and the =disjunct= member function will test if the boundary of the
+In our case, all it requires is a small modification of the ``RecordIntervals`` class. The constructor
+now accepts a rounding argument and the ``disjunct`` member function will test if the boundary of the
 newly requested interval is below the threshold, the new interval is not added.
 ::
     import pendulum as pdl
@@ -219,9 +217,9 @@ returned over the interval.
 Access to cached function
 --------------------------
 
-Passing the key-word argument =get_function_cachedQ=True= will result in all other arguments
+Passing the key-word argument ``get_function_cachedQ=True`` will result in all other arguments
 being ignored and the cached function being returned. Depending on the underlying memoization implementation,
-some introspection might be available.
+some introspection and direct manipulation of the cache might be available.
 ::
         @MemoizationWithIntervals(
             [0], ['interval1'],
