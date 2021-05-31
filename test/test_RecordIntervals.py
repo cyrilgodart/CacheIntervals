@@ -1,30 +1,13 @@
-import itertools
 import portion
 import pendulum as pdl
 
-from CacheIntervals.utils import flatten
-from CacheIntervals.Intervals import po2pd, pd2po
 
-import logging
-import daiquiri
 import pandas as pd
-import loguru
 from CacheIntervals.utils.Dates import pdl2pd, pd2pdl, all2pdl
 from CacheIntervals.RecordInterval import RecordIntervals, RecordIntervalsPandas
 
-tssixdaysago = pdl2pd(pdl.yesterday('UTC').add(days=-5))
-tsfivedaysago = pdl2pd(pdl.yesterday('UTC').add(days=-4))
-tsfourdaysago = pdl2pd(pdl.yesterday('UTC').add(days=-3))
-tsthreedaysago = pdl2pd(pdl.yesterday('UTC').add(days=-2))
-tstwodaysago = pdl2pd(pdl.yesterday('UTC').add(days=-1))
-tsyesterday = pdl2pd(pdl.yesterday('UTC'))
-tstoday = pdl2pd(pdl.today('UTC'))
-tstomorrow = pdl2pd(pdl.tomorrow('UTC'))
-tsintwodays = pdl2pd(pdl.tomorrow('UTC').add(days=1))
-tsinthreedays = pdl2pd(pdl.tomorrow('UTC').add(days=2))
-
-
 def test_RI_0():
+    # Simple case
     itvals = RecordIntervals()
     itvals(portion.closed(-2, 0))
     itvals(portion.closed(-1, 0))
@@ -42,6 +25,7 @@ def test_RI_0():
 
 
 def test_RI_1():
+    # Similar test with dates
     itvals = RecordIntervals()
     itvals(portion.closed(pdl.yesterday(), pdl.today()))
     calls = itvals(portion.closed(pdl.yesterday().add(days=-1), pdl.tomorrow()))
@@ -53,6 +37,7 @@ def test_RI_1():
 
 
 def test_RIP_0():
+    # Two overlapping stored intervals
     itvals = RecordIntervalsPandas()
     itvals(pd.Interval(-2, 0))
     itvals(pd.Interval(-3, -2))
@@ -68,6 +53,7 @@ def test_RIP_0():
 
 
 def test_RIP_subinterval_strat1():
+    # Two overlapping stored intervals with subinterval set to True
     itvals = RecordIntervalsPandas(subintervals_requiredQ=True)
     itvals(pd.Interval(-2, 0))
     itvals(pd.Interval(-3, -2))
@@ -82,6 +68,7 @@ def test_RIP_subinterval_strat1():
 
 
 def test_RIP_subinterval_strat2():
+    # A strategy of dubious utility
     itvals = RecordIntervalsPandas(subintervals_requiredQ=True, subinterval_minQ=True)
     itvals(pd.Interval(-2, 0))
     itvals(pd.Interval(-3, -2))
@@ -97,6 +84,7 @@ def test_RIP_subinterval_strat2():
 
 
 def test_RIP_1():
+    # test RecordIntervalsPandas with dates
     itvals = RecordIntervalsPandas()
     itvals(pd.Interval(pdl2pd(pdl.yesterday()),pdl2pd(pdl.today())))
     calls = itvals(pd.Interval(pdl2pd(pdl.yesterday().add(days=-1)), pdl2pd(pdl.tomorrow())))
