@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#persistence
+*.pkl
+*.sqlite
+*.csv
+*.gz
+
+
 # C extensions
 *.so
 
