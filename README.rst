@@ -186,6 +186,35 @@ Changing interval strategy for proper aggregation
 The default interval strategy returns a superset of the requested interval if such is already stored.
 This is incompatible with an aggregation strategy that takes the cumulative sum or the average of the data
 returned over the interval.
+::
+    def agg_cumul(listdf):
+        listdf = [df for df in listdf if not (df is None) and not (df.empty)]
+        if len(listdf):
+            df = reduce(lambda x, y: x.add(y, fill_value=0), listdf)
+        else:
+            raise Exception("Nothing to aggregate")
+        return df
+
+    @MemoizationWithIntervals(
+        [],
+        ['period'],
+        aggregation=agg_cumul,
+        debug=False,
+        memoization=klepto.lru_cache(
+            maxsize=500,
+            cache=klepto.archives.dict_archive(),
+            keymap=klepto.keymaps.stringmap(typed=False, flat=False)),
+        subintervals_requiredQ=True # extra-kwarg are passed to RecordInterval constructor
+    )
+    def aggregate_records(conn, name_table, period=pd.Interval(pd.Timestamp(2021, 1, 1), pd.Timestamp(2021, 1, 31))):
+        time.sleep(delay)  # simulating a long SQL request
+        query = f"Select sum(amount_in_eur) " \
+                f"From {name_table} " \
+                f"Where date(date) >= date('{period.left.date()}') and date(date) < date('{period.right.date()}')" \
+                f"Group by currency"
+        df = pd.read_sql(query, conn)
+        return df
+
 
 Access to cached function
 --------------------------
