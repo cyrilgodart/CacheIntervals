@@ -179,7 +179,6 @@ newly requested interval is below the threshold, the new interval is not added.
     time.sleep(6)
     print('==== 3rd pass ===')
     print(f'Final result: {function_with_interval_params(["USD/JPY"], period=pd.Interval(tstoday, pd.Timestamp.now(tz="UTC")))}')
-    #+end_src
 
 Changing interval strategy for proper aggregation
 ---------------------------------------------------
@@ -187,6 +186,13 @@ Changing interval strategy for proper aggregation
 The default interval strategy returns a superset of the requested interval if such is already stored.
 This is incompatible with an aggregation strategy that takes the cumulative sum or the average of the data
 returned over the interval.
+
+
+Testing
+=======
+
+In order to run the tests, you need to first generate a SQL Lite database. To do so, run the GeneratorTests.py
+script from the Ancillaries directory.
 
 
 Author
