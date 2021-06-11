@@ -261,6 +261,9 @@ Testing
 In order to run the tests, you need to first generate a SQL Lite database. To do so, run the ``GeneratorTests.py``
 script from the ``Ancillaries`` directory.
 
+Reference
+=========
+https://towardsdatascience.com/memoization-with-intervals-in-python-887ece304278
 
 Author
 ======
