@@ -11,13 +11,14 @@ CacheIntervals
 .. image:: https://readthedocs.org/projects/CacheIntervals/badge/?version=latest
    :target: http://CacheIntervals.readthedocs.io/en/latest/?badge=latest
 
-
-Memoization with interval parameters
+Memoization of Time Series. 
 
 Introduction
 ============
 
-CacheIntervals allows lazy evaluation of functions with interval parameters. Several strategies and options are available.
+CacheIntervals allows lazy evaluation of functions with interval parameters. 
+That is in particular, it allows straight-forward caching of generic time series. 
+Several strategies and options are available.
 
 Usage
 ============
